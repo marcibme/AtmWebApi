@@ -15,8 +15,4 @@
     <ProjectReference Include="..\DataAccess.EFCore\DataAccess.EFCore.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
