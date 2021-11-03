@@ -10,20 +10,16 @@ using Microsoft.Extensions.Configuration;
 
 namespace AtmWebApi.Controllers
 {
-    //[Route("api/[controller]")]
     [ApiController]
     public class StockController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly int[] allowedBanknotes;
+
         public StockController(IUnitOfWork unitOfWork, IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _configuration = configuration;
-
-            if (allowedBanknotes == null)
-                allowedBanknotes = _configuration.GetSection("AllowedBanknotes").Get<int[]>();
         }
 
 
@@ -41,7 +37,7 @@ namespace AtmWebApi.Controllers
         {
             foreach (var itemToDeposit in itemsToDeposit)
             {
-                if (!allowedBanknotes.Contains(itemToDeposit.Key))
+                if (!IsBanknoteAccepted(itemToDeposit.Key))
                     return BadRequest($"Not accepted banknote: {itemToDeposit.Key}");
 
                 var existingItem = _unitOfWork.Stock.GetById(itemToDeposit.Key);
@@ -68,5 +64,10 @@ namespace AtmWebApi.Controllers
             return Ok();
         }
 
+        private bool IsBanknoteAccepted(int bankNote)
+        {
+            var allowedBanknotes = _configuration.GetSection("AllowedBanknotes").Get<int[]>();
+            return allowedBanknotes.Contains(bankNote);
+        }
     }
 }
