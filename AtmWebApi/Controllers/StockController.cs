@@ -59,15 +59,42 @@ namespace AtmWebApi.Controllers
 
         [HttpPost]
         [Route("api/withdrawal")]
-        public ActionResult<Dictionary<int, int>> Withdrawal(int withdrawValue)
+        public ActionResult<Dictionary<int, int>> Withdrawal([FromBody]int withdrawValue)
         {
-            return Ok();
+            Dictionary<int, int> returnValue = new Dictionary<int, int>();
+
+            if (withdrawValue > _unitOfWork.Stock.GetFullStockValue())
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, "Insufficient balance");
+
+            if (withdrawValue % 1000 != 0)
+                return BadRequest("Smallest unit is 1000");
+
+            var acceptedBanknotes = GetAcceptedBanknotesDescending();
+            
+            foreach (var banknote in acceptedBanknotes)
+            {
+                if (withdrawValue >= banknote)
+                {
+                    Console.WriteLine($"note: {banknote}: {withdrawValue / banknote}");
+                    returnValue.Add(banknote, withdrawValue / banknote);
+                    withdrawValue = withdrawValue % banknote;
+                }
+            }
+
+            return Ok(returnValue);
         }
 
         private bool IsBanknoteAccepted(int bankNote)
         {
-            var allowedBanknotes = _configuration.GetSection("AllowedBanknotes").Get<int[]>();
-            return allowedBanknotes.Contains(bankNote);
+            var acceptedBanknotes = _configuration.GetSection("AcceptedBanknotes").Get<int[]>();
+            return acceptedBanknotes.Contains(bankNote);
+        }
+
+        private List<int> GetAcceptedBanknotesDescending()
+        {
+            var acceptedBanknotes = _configuration.GetSection("AcceptedBanknotes").Get<int[]>();
+
+            return acceptedBanknotes.OrderByDescending(x => x).ToList();
         }
     }
 }
