@@ -1,17 +1,12 @@
+using AtmWebApi.Tools;
 using DataAccess.EFCore;
 using DataAccess.EFCore.Repositories;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AtmWebApi
 {
@@ -34,6 +29,7 @@ namespace AtmWebApi
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IStockRepository, StockRepository>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient<IStockManager, StockManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

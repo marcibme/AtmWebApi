@@ -1,100 +1,85 @@
 ﻿using Domain.Entities;
-using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using AtmWebApi.Tools;
 
 namespace AtmWebApi.Controllers
 {
     [ApiController]
     public class StockController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IStockManager _stockManager;
 
-        public StockController(IUnitOfWork unitOfWork, IConfiguration configuration)
+        public StockController(IStockManager stockManager)
         {
-            _unitOfWork = unitOfWork;
-            _configuration = configuration;
-        }
-
-
-        [HttpGet]
-        [Route("api/stock")]
-        public ActionResult<IEnumerable<StockItem>> GetStockItems()
-        {
-            Dictionary<int, int> retValue = _unitOfWork.Stock.GetAll().ToDictionary(x => x.Id, y => y.Count);
-            return Ok(retValue);
+            _stockManager = stockManager;
         }
 
         [HttpPost]
         [Route("api/deposit")]
         public ActionResult<int> Deposit(Dictionary<int, int> itemsToDeposit)
         {
-            foreach (var itemToDeposit in itemsToDeposit)
+            try
             {
-                if (!IsBanknoteAccepted(itemToDeposit.Key))
-                    return BadRequest($"Not accepted banknote: {itemToDeposit.Key}");
-
-                var existingItem = _unitOfWork.Stock.GetById(itemToDeposit.Key);
-
-                if (existingItem == null)
-                {
-                    _unitOfWork.Stock.Add(new StockItem() { Id = itemToDeposit.Key, Count = itemToDeposit.Value });
-                }
-                else
-                {
-                    existingItem.Count += itemToDeposit.Value;
-                }
+                return Ok(_stockManager.Deposit(itemsToDeposit));
             }
-
-            _unitOfWork.Complete();
-
-            return Ok(_unitOfWork.Stock.GetFullStockValue());
+            catch(Exception)
+            {
+                return BadRequest();
+            }
         }
+
 
         [HttpPost]
         [Route("api/withdrawal")]
-        public ActionResult<Dictionary<int, int>> Withdrawal([FromBody]int withdrawValue)
+        public ActionResult<Dictionary<int, int>> Withdrawal([FromBody] int withdrawValue)
         {
-            Dictionary<int, int> returnValue = new Dictionary<int, int>();
-
-            if (withdrawValue > _unitOfWork.Stock.GetFullStockValue())
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, "Insufficient balance");
-
-            if (withdrawValue % 1000 != 0)
-                return BadRequest("Smallest unit is 1000");
-
-            var acceptedBanknotes = GetAcceptedBanknotesDescending();
-            
-            foreach (var banknote in acceptedBanknotes)
+            try
             {
-                if (withdrawValue >= banknote)
-                {
-                    Console.WriteLine($"note: {banknote}: {withdrawValue / banknote}");
-                    returnValue.Add(banknote, withdrawValue / banknote);
-                    withdrawValue = withdrawValue % banknote;
-                }
+                return Ok(_stockManager.Withdrawal(withdrawValue));
             }
-
-            return Ok(returnValue);
+            catch(ArgumentException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            catch(Exception)
+            {
+                return BadRequest();
+            }
         }
 
-        private bool IsBanknoteAccepted(int bankNote)
+#region helper functions
+        [HttpGet]
+        [Route("api/stock")]
+        public ActionResult<IEnumerable<StockItem>> GetStockItems()
         {
-            var acceptedBanknotes = _configuration.GetSection("AcceptedBanknotes").Get<int[]>();
-            return acceptedBanknotes.Contains(bankNote);
+            try
+            {
+                return Ok(_stockManager.GetStock());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        private List<int> GetAcceptedBanknotesDescending()
+        [HttpGet]
+        [Route("api/reset")]
+        public ActionResult ResetStock()
         {
-            var acceptedBanknotes = _configuration.GetSection("AcceptedBanknotes").Get<int[]>();
-
-            return acceptedBanknotes.OrderByDescending(x => x).ToList();
+            try
+            {
+                _stockManager.ResetStock();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
+#endregion helper functions
+
     }
 }
