@@ -70,24 +70,24 @@ namespace AtmWebApi.Tools
                 if (withdrawValue >= banknote)
                 {
                     int requiredCountofBanknote = withdrawValue / banknote;
-                    var banknotes = _unitOfWork.Stock.GetById(banknote);
+                    var banknotesAvaiable = _unitOfWork.Stock.GetById(banknote);
 
-                    if (banknotes == null)
+                    if (banknotesAvaiable == null)
                         continue;
 
-                    if (banknotes.Count < requiredCountofBanknote)
-                        requiredCountofBanknote = banknotes.Count;
+                    if (banknotesAvaiable.Count < requiredCountofBanknote)
+                        requiredCountofBanknote = banknotesAvaiable.Count;
 
-                    banknotes.Count -= requiredCountofBanknote;
+                    banknotesAvaiable.Count -= requiredCountofBanknote;
 
                     returnValue.Add(banknote, requiredCountofBanknote);
-                    withdrawValue = withdrawValue - (banknote * requiredCountofBanknote);
+                    withdrawValue -= (banknote * requiredCountofBanknote);
                 }
 
                 if (withdrawValue == 0)
                 {
-                    LogBanknotes(returnValue, "Banknotes to withdraw:");
                     _unitOfWork.Complete();
+                    LogBanknotes(returnValue, "Banknotes to withdraw:");
                     return returnValue;
                 }
             }
@@ -105,7 +105,6 @@ namespace AtmWebApi.Tools
         private List<int> GetAcceptedBanknotesDescending()
         {
             var acceptedBanknotes = _configuration.GetSection(ACCEPTED_BANKNOTES_SETTING).Get<int[]>();
-
             return acceptedBanknotes.OrderByDescending(x => x).ToList();
         }
 
