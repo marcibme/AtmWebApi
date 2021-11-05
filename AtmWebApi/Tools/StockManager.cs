@@ -25,7 +25,10 @@ namespace AtmWebApi.Tools
             foreach (var itemToDeposit in itemsToDeposit)
             {
                 if (!IsBanknoteAccepted(itemToDeposit.Key))
+                {
+                    Console.WriteLine($"Not accepted banknote: {itemToDeposit.Key}");
                     throw new Exception($"Not accepted banknote: {itemToDeposit.Key}");
+                }
 
                 var existingItem = _unitOfWork.Stock.GetById(itemToDeposit.Key);
 
