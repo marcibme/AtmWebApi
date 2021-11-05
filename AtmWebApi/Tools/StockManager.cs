@@ -21,6 +21,7 @@ namespace AtmWebApi.Tools
 
         public int Deposit(Dictionary<int, int> itemsToDeposit)
         {
+            LogBanknotes(itemsToDeposit, "Banknotes to deposit:");
             foreach (var itemToDeposit in itemsToDeposit)
             {
                 if (!IsBanknoteAccepted(itemToDeposit.Key))
@@ -40,18 +41,27 @@ namespace AtmWebApi.Tools
 
             _unitOfWork.Complete();
 
-            return _unitOfWork.Stock.GetFullStockValue();
+            var stockValue = _unitOfWork.Stock.GetFullStockValue();
+            Console.WriteLine($"Value of stock:{stockValue}");
+            return stockValue;
         }
 
         public Dictionary<int, int> Withdrawal(int withdrawValue)
         {
+            Console.WriteLine($"Withdrawing:{withdrawValue}");
             Dictionary<int, int> returnValue = new Dictionary<int, int>();
 
             if (withdrawValue > _unitOfWork.Stock.GetFullStockValue())
+            {
+                Console.WriteLine("Insuficcient money in stock.");
                 throw new ArgumentException("Insuficcient money in stock.");
+            }
 
             if (withdrawValue % 1000 != 0)
+            {
+                Console.WriteLine("Smallest unit is 1000.");
                 throw new Exception("Smallest unit is 1000.");
+            }
 
             var acceptedBanknotes = GetAcceptedBanknotesDescending();
 
@@ -62,23 +72,27 @@ namespace AtmWebApi.Tools
                     int requiredCountofBanknote = withdrawValue / banknote;
                     var banknotes = _unitOfWork.Stock.GetById(banknote);
 
+                    if (banknotes == null)
+                        continue;
+
                     if (banknotes.Count < requiredCountofBanknote)
                         requiredCountofBanknote = banknotes.Count;
 
                     banknotes.Count -= requiredCountofBanknote;
 
                     returnValue.Add(banknote, requiredCountofBanknote);
-                    Console.WriteLine($"note: {banknote}: {requiredCountofBanknote}");
                     withdrawValue = withdrawValue - (banknote * requiredCountofBanknote);
                 }
 
                 if (withdrawValue == 0)
                 {
+                    LogBanknotes(returnValue, "Banknotes to withdraw:");
                     _unitOfWork.Complete();
                     return returnValue;
                 }
             }
 
+            Console.WriteLine("Insuficcient money in stock.");
             throw new ArgumentException("Insuficcient money in stock.");
         }
 
@@ -95,7 +109,17 @@ namespace AtmWebApi.Tools
             return acceptedBanknotes.OrderByDescending(x => x).ToList();
         }
 
-#region helper functions
+        #region helper functions
+
+        private void LogBanknotes(Dictionary<int, int> items, string message)
+        {
+            Console.WriteLine(message);
+            foreach(var item in items)
+            {
+                Console.WriteLine($"Banknote:{item.Key} : {item.Value}");
+            }
+        }
+
         public Dictionary<int, int> GetStock()
         {
             return _unitOfWork.Stock.GetAll().ToDictionary(x => x.Id, y => y.Count);
@@ -106,6 +130,6 @@ namespace AtmWebApi.Tools
             _unitOfWork.Stock.RemoveRange(_unitOfWork.Stock.GetAll());
             _unitOfWork.Complete();
         }
-#endregion helper functions
+        #endregion helper functions
     }
 }
