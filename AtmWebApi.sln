@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtmWebApi", "AtmWebApi\AtmWebApi.csproj", "{EA392283-D5C5-4916-9FA6-0CF765253362}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AtmWebApi", "AtmWebApi\AtmWebApi.csproj", "{EA392283-D5C5-4916-9FA6-0CF765253362}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.EFCore", "DataAccess.EFCore\DataAccess.EFCore.csproj", "{68F6D130-DFB8-45B5-BC40-A2E74F110973}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccess.EFCore", "DataAccess.EFCore\DataAccess.EFCore.csproj", "{68F6D130-DFB8-45B5-BC40-A2E74F110973}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{D86375D6-78B0-4DEB-B468-95B21279EA1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{D86375D6-78B0-4DEB-B468-95B21279EA1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtmWbApiTests", "AtmWbApiTests\AtmWbApiTests.csproj", "{11509091-07CD-4DDE-8310-82967C6572D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{D86375D6-78B0-4DEB-B468-95B21279EA1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D86375D6-78B0-4DEB-B468-95B21279EA1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D86375D6-78B0-4DEB-B468-95B21279EA1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11509091-07CD-4DDE-8310-82967C6572D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11509091-07CD-4DDE-8310-82967C6572D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11509091-07CD-4DDE-8310-82967C6572D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11509091-07CD-4DDE-8310-82967C6572D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

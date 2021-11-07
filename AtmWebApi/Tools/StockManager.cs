@@ -9,14 +9,13 @@ namespace AtmWebApi.Tools
 {
     public class StockManager : IStockManager
     {
-        private static string ACCEPTED_BANKNOTES_SETTING = "AcceptedBanknotes";
 
-        private readonly IConfiguration _configuration;
+        private readonly IConfigManager _configManager;
         private readonly IUnitOfWork _unitOfWork;
-        public StockManager(IUnitOfWork unitOfWork, IConfiguration configuration)
+        public StockManager(IUnitOfWork unitOfWork, IConfigManager configManager)
         {
             _unitOfWork = unitOfWork;
-            _configuration = configuration;
+            _configManager = configManager;
         }
 
         public int Deposit(Dictionary<int, int> itemsToDeposit)
@@ -24,10 +23,14 @@ namespace AtmWebApi.Tools
             LogBanknotes(itemsToDeposit, "Banknotes to deposit:");
             foreach (var itemToDeposit in itemsToDeposit)
             {
-                if (!IsBanknoteAccepted(itemToDeposit.Key))
+                if (itemsToDeposit.Count < 0)
                 {
-                    Console.WriteLine($"Not accepted banknote: {itemToDeposit.Key}");
-                    throw new Exception($"Not accepted banknote: {itemToDeposit.Key}");
+                    ThrowExceptionWithConsoleLog(new Exception($"Not accepted amount: {itemToDeposit.Key}:{itemsToDeposit.Count}"));
+                }
+
+                if (!_configManager.IsBanknoteAccepted(itemToDeposit.Key))
+                {
+                    ThrowExceptionWithConsoleLog(new Exception($"Not accepted banknote: {itemToDeposit.Key}"));
                 }
 
                 var existingItem = _unitOfWork.Stock.GetById(itemToDeposit.Key);
@@ -54,19 +57,22 @@ namespace AtmWebApi.Tools
             Console.WriteLine($"Withdrawing:{withdrawValue}");
             Dictionary<int, int> returnValue = new Dictionary<int, int>();
 
-            if (withdrawValue > _unitOfWork.Stock.GetFullStockValue())
+            if (withdrawValue <= 0)
             {
-                Console.WriteLine("Insuficcient money in stock.");
-                throw new ArgumentException("Insuficcient money in stock.");
+                ThrowExceptionWithConsoleLog(new Exception("Withdraw value incorrect."));
             }
 
             if (withdrawValue % 1000 != 0)
             {
-                Console.WriteLine("Smallest unit is 1000.");
-                throw new Exception("Smallest unit is 1000.");
+                ThrowExceptionWithConsoleLog(new Exception("Smallest unit is 1000."));
             }
 
-            var acceptedBanknotes = GetAcceptedBanknotesDescending();
+            if (withdrawValue > _unitOfWork.Stock.GetFullStockValue())
+            {
+                ThrowExceptionWithConsoleLog(new ArgumentException("Insuficcient money in stock."));
+            }
+
+            var acceptedBanknotes = _configManager.GetAcceptedBanknotesDescending();
 
             foreach (var banknote in acceptedBanknotes)
             {
@@ -95,20 +101,8 @@ namespace AtmWebApi.Tools
                 }
             }
 
-            Console.WriteLine("Insuficcient money in stock.");
-            throw new ArgumentException("Insuficcient money in stock.");
-        }
-
-        private bool IsBanknoteAccepted(int bankNote)
-        {
-            var acceptedBanknotes = _configuration.GetSection(ACCEPTED_BANKNOTES_SETTING).Get<int[]>();
-            return acceptedBanknotes.Contains(bankNote);
-        }
-
-        private List<int> GetAcceptedBanknotesDescending()
-        {
-            var acceptedBanknotes = _configuration.GetSection(ACCEPTED_BANKNOTES_SETTING).Get<int[]>();
-            return acceptedBanknotes.OrderByDescending(x => x).ToList();
+            ThrowExceptionWithConsoleLog(new ArgumentException("Insuficcient money in stock."));
+            return null;
         }
 
         #region helper functions
@@ -116,10 +110,16 @@ namespace AtmWebApi.Tools
         private void LogBanknotes(Dictionary<int, int> items, string message)
         {
             Console.WriteLine(message);
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 Console.WriteLine($"Banknote:{item.Key} : {item.Value}");
             }
+        }
+
+        private void ThrowExceptionWithConsoleLog(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw ex;
         }
 
         public Dictionary<int, int> GetStock()

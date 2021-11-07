@@ -30,6 +30,7 @@ namespace AtmWebApi
             services.AddTransient<IStockRepository, StockRepository>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddTransient<IStockManager, StockManager>();
+            services.AddTransient<IConfigManager, ConfigManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
