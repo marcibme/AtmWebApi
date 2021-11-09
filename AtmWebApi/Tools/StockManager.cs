@@ -55,7 +55,6 @@ namespace AtmWebApi.Tools
         public Dictionary<int, int> Withdrawal(int withdrawValue)
         {
             Console.WriteLine($"Withdrawing:{withdrawValue}");
-            Dictionary<int, int> returnValue = new Dictionary<int, int>();
 
             if (withdrawValue <= 0)
             {
@@ -72,25 +71,33 @@ namespace AtmWebApi.Tools
                 ThrowExceptionWithConsoleLog(new ArgumentException("Insuficcient money in stock."));
             }
 
-            var acceptedBanknotes = _configManager.GetAcceptedBanknotesDescending();
+            var itemsToWithdraw = RetrieveBanknotesFromStockToWithdraw(withdrawValue);
 
-            foreach (var banknote in acceptedBanknotes)
+            if (itemsToWithdraw != null)
+                return itemsToWithdraw;
+
+            Console.WriteLine("Insuficcient money in stock.");
+            throw new ArgumentException("Insuficcient money in stock.");
+        }
+
+        private Dictionary<int, int> RetrieveBanknotesFromStockToWithdraw(int withdrawValue)
+        {
+            var availableBanknotes = _unitOfWork.Stock.GetItemsCountGreaterThanZeroDescendingById();
+
+            Dictionary<int, int> returnValue = new Dictionary<int, int>();
+            foreach (var banknote in availableBanknotes)
             {
-                if (withdrawValue >= banknote)
+                if (withdrawValue >= banknote.Id)
                 {
-                    int requiredCountofBanknote = withdrawValue / banknote;
-                    var banknotesAvaiable = _unitOfWork.Stock.GetById(banknote);
+                    int requiredCountofBanknote = withdrawValue / banknote.Id;
 
-                    if (banknotesAvaiable == null)
-                        continue;
+                    if (banknote.Count < requiredCountofBanknote)
+                        requiredCountofBanknote = banknote.Count;
 
-                    if (banknotesAvaiable.Count < requiredCountofBanknote)
-                        requiredCountofBanknote = banknotesAvaiable.Count;
+                    banknote.Count -= requiredCountofBanknote;
 
-                    banknotesAvaiable.Count -= requiredCountofBanknote;
-
-                    returnValue.Add(banknote, requiredCountofBanknote);
-                    withdrawValue -= (banknote * requiredCountofBanknote);
+                    returnValue.Add(banknote.Id, requiredCountofBanknote);
+                    withdrawValue -= (banknote.Id * requiredCountofBanknote);
                 }
 
                 if (withdrawValue == 0)
@@ -100,8 +107,6 @@ namespace AtmWebApi.Tools
                     return returnValue;
                 }
             }
-
-            ThrowExceptionWithConsoleLog(new ArgumentException("Insuficcient money in stock."));
             return null;
         }
 

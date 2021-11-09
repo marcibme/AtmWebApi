@@ -8,5 +8,6 @@ namespace Domain.Interfaces
     public interface IStockRepository : IGenericRepository<StockItem>
     {
         int GetFullStockValue();
+        List<StockItem> GetItemsCountGreaterThanZeroDescendingById();
     }
 }

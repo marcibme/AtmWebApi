@@ -16,5 +16,10 @@ namespace DataAccess.EFCore.Repositories
         {
             return _context.StockItems.ToList().Sum(x => x.Count * x.Id);
         }
+
+        public List<StockItem> GetItemsCountGreaterThanZeroDescendingById()
+        {
+            return _context.StockItems.Where(x => x.Count > 0).OrderByDescending(x => x.Id).ToList();
+        }
     }
 }
