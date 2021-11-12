@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using AtmWebApi.Tools;
 
 namespace AtmWebApi.Controllers
-{
+{}
     [ApiController]
     public class StockController : ControllerBase
     {
